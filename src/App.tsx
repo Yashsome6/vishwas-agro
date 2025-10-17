@@ -14,6 +14,8 @@ import Staff from "./pages/Staff";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
+import CustomerPortal from "./pages/CustomerPortal";
+import VendorPortal from "./pages/VendorPortal";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +37,8 @@ const App = () => (
               <Route path="reports" element={<Reports />} />
               <Route path="settings" element={<Settings />} />
             </Route>
+            <Route path="customer-portal" element={<CustomerPortal />} />
+            <Route path="vendor-portal" element={<VendorPortal />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

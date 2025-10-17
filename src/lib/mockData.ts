@@ -16,7 +16,16 @@ export const mockData = {
     expiry: new Date(2025, Math.floor(Math.random() * 12), Math.floor(Math.random() * 28) + 1).toISOString(),
     purchasePrice: Math.floor(Math.random() * 500) + 100,
     sellingPrice: Math.floor(Math.random() * 700) + 200,
+    warehouse: ["main", "secondary", "storage"][i % 3],
+    averageDailySales: Math.floor(Math.random() * 20) + 5,
+    leadTimeDays: Math.floor(Math.random() * 10) + 5,
   })),
+  
+  warehouses: [
+    { id: "main", name: "Main Warehouse", location: "District A", capacity: 10000, currentStock: 7500 },
+    { id: "secondary", name: "Secondary Warehouse", location: "District B", capacity: 5000, currentStock: 3200 },
+    { id: "storage", name: "Storage Unit", location: "District C", capacity: 3000, currentStock: 1800 },
+  ],
   
   vendors: Array.from({ length: 20 }, (_, i) => ({
     id: `vendor-${i + 1}`,

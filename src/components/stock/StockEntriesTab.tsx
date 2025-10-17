@@ -32,6 +32,9 @@ export default function StockEntriesTab() {
     batch: "",
     purchasePrice: "",
     sellingPrice: "",
+    warehouse: "main",
+    avgSales: "",
+    leadTime: ""
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -40,7 +43,17 @@ export default function StockEntriesTab() {
     if (editingItem) {
       const updated = data.stock.map((item: any) =>
         item.id === editingItem.id
-          ? { ...item, ...formData, expiry: expiryDate?.toISOString(), quantity: Number(formData.quantity), minQuantity: Number(formData.minQuantity), purchasePrice: Number(formData.purchasePrice), sellingPrice: Number(formData.sellingPrice) }
+          ? { 
+              ...item, 
+              ...formData, 
+              expiry: expiryDate?.toISOString(), 
+              quantity: Number(formData.quantity), 
+              minQuantity: Number(formData.minQuantity), 
+              purchasePrice: Number(formData.purchasePrice), 
+              sellingPrice: Number(formData.sellingPrice),
+              averageDailySales: Number(formData.avgSales) || 5,
+              leadTimeDays: Number(formData.leadTime) || 7
+            }
           : item
       );
       updateData("stock", updated);
@@ -54,6 +67,8 @@ export default function StockEntriesTab() {
         minQuantity: Number(formData.minQuantity),
         purchasePrice: Number(formData.purchasePrice),
         sellingPrice: Number(formData.sellingPrice),
+        averageDailySales: Number(formData.avgSales) || 5,
+        leadTimeDays: Number(formData.leadTime) || 7
       };
       updateData("stock", [...data.stock, newItem]);
       toast({ title: "Stock item added successfully" });
@@ -62,7 +77,7 @@ export default function StockEntriesTab() {
     setIsOpen(false);
     setEditingItem(null);
     setExpiryDate(undefined);
-    setFormData({ name: "", category: "", quantity: "", minQuantity: "50", batch: "", purchasePrice: "", sellingPrice: "" });
+    setFormData({ name: "", category: "", quantity: "", minQuantity: "50", batch: "", purchasePrice: "", sellingPrice: "", warehouse: "main", avgSales: "", leadTime: "" });
   };
 
   const handleEdit = (item: any) => {
@@ -75,6 +90,9 @@ export default function StockEntriesTab() {
       batch: item.batch,
       purchasePrice: item.purchasePrice.toString(),
       sellingPrice: item.sellingPrice.toString(),
+      warehouse: item.warehouse || "main",
+      avgSales: item.averageDailySales?.toString() || "",
+      leadTime: item.leadTimeDays?.toString() || ""
     });
     setExpiryDate(new Date(item.expiry));
     setIsOpen(true);
@@ -114,7 +132,7 @@ export default function StockEntriesTab() {
         </div>
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => { setEditingItem(null); setFormData({ name: "", category: "", quantity: "", minQuantity: "50", batch: "", purchasePrice: "", sellingPrice: "" }); setExpiryDate(undefined); }}>
+            <Button onClick={() => { setEditingItem(null); setFormData({ name: "", category: "", quantity: "", minQuantity: "50", batch: "", purchasePrice: "", sellingPrice: "", warehouse: "main", avgSales: "", leadTime: "" }); setExpiryDate(undefined); }}>
               <Plus className="h-4 w-4 mr-2" />
               Add Stock
             </Button>
@@ -151,6 +169,23 @@ export default function StockEntriesTab() {
                   <Input id="minQuantity" type="number" value={formData.minQuantity} onChange={(e) => setFormData({ ...formData, minQuantity: e.target.value })} required />
                 </div>
                 <div>
+                  <Label htmlFor="warehouse">Warehouse</Label>
+                  <Select value={formData.warehouse || "main"} onValueChange={(value) => setFormData({ ...formData, warehouse: value })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select warehouse" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {data.warehouses?.map((w: any) => (
+                        <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="avgSales">Avg Daily Sales</Label>
+                  <Input id="avgSales" type="number" value={formData.avgSales || ""} onChange={(e) => setFormData({ ...formData, avgSales: e.target.value })} placeholder="For reorder calculation" />
+                </div>
+                <div>
                   <Label htmlFor="batch">Batch Number</Label>
                   <Input id="batch" value={formData.batch} onChange={(e) => setFormData({ ...formData, batch: e.target.value })} required />
                 </div>
@@ -175,6 +210,10 @@ export default function StockEntriesTab() {
                 <div>
                   <Label htmlFor="sellingPrice">Selling Price (₹)</Label>
                   <Input id="sellingPrice" type="number" value={formData.sellingPrice} onChange={(e) => setFormData({ ...formData, sellingPrice: e.target.value })} required />
+                </div>
+                <div>
+                  <Label htmlFor="leadTime">Lead Time (days)</Label>
+                  <Input id="leadTime" type="number" value={formData.leadTime} onChange={(e) => setFormData({ ...formData, leadTime: e.target.value })} placeholder="Supplier lead time" />
                 </div>
               </div>
               <Button type="submit" className="w-full">{editingItem ? "Update" : "Add"} Stock Item</Button>

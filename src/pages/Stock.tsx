@@ -5,6 +5,8 @@ import CategoriesTab from "@/components/stock/CategoriesTab";
 import StockEntriesTab from "@/components/stock/StockEntriesTab";
 import AlertsTab from "@/components/stock/AlertsTab";
 import StockLedgerTab from "@/components/stock/StockLedgerTab";
+import ReorderTab from "@/components/stock/ReorderTab";
+import WarehouseTab from "@/components/stock/WarehouseTab";
 
 export default function Stock() {
   return (
@@ -18,7 +20,9 @@ export default function Stock() {
         <TabsList>
           <TabsTrigger value="entries">Stock Entries</TabsTrigger>
           <TabsTrigger value="categories">Categories</TabsTrigger>
+          <TabsTrigger value="warehouses">Warehouses</TabsTrigger>
           <TabsTrigger value="alerts">Alerts</TabsTrigger>
+          <TabsTrigger value="reorder">Smart Reorder</TabsTrigger>
           <TabsTrigger value="ledger">Stock Ledger</TabsTrigger>
         </TabsList>
 
@@ -30,8 +34,16 @@ export default function Stock() {
           <CategoriesTab />
         </TabsContent>
 
+        <TabsContent value="warehouses">
+          <WarehouseTab />
+        </TabsContent>
+
         <TabsContent value="alerts">
           <AlertsTab />
+        </TabsContent>
+
+        <TabsContent value="reorder">
+          <ReorderTab />
         </TabsContent>
 
         <TabsContent value="ledger">
