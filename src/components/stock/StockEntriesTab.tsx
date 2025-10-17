@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useAppData } from "@/contexts/AppContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, Edit, Trash2 } from "lucide-react";
+import { Plus, Search, Edit, Trash2, Barcode as BarcodeIcon } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -14,6 +14,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import BarcodeDisplay, { PrintableBarcode } from "@/components/common/BarcodeDisplay";
 
 export default function StockEntriesTab() {
   const { data, updateData } = useAppData();
@@ -22,6 +23,7 @@ export default function StockEntriesTab() {
   const [editingItem, setEditingItem] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [expiryDate, setExpiryDate] = useState<Date>();
+  const [showBarcode, setShowBarcode] = useState<any>(null);
   const [formData, setFormData] = useState({
     name: "",
     category: "",
@@ -193,6 +195,7 @@ export default function StockEntriesTab() {
               <TableHead>Purchase Price</TableHead>
               <TableHead>Selling Price</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Barcode</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -212,6 +215,17 @@ export default function StockEntriesTab() {
                     <Badge variant={status.variant}>{status.label}</Badge>
                   </TableCell>
                   <TableCell>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => setShowBarcode(item)}
+                      className="gap-2"
+                    >
+                      <BarcodeIcon className="h-4 w-4" />
+                      Show
+                    </Button>
+                  </TableCell>
+                  <TableCell>
                     <div className="flex gap-1">
                       <Button variant="ghost" size="icon" onClick={() => handleEdit(item)}>
                         <Edit className="h-4 w-4" />
@@ -227,6 +241,31 @@ export default function StockEntriesTab() {
           </TableBody>
         </Table>
       </div>
+
+      {/* Barcode Dialog */}
+      <Dialog open={!!showBarcode} onOpenChange={() => setShowBarcode(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Barcode - {showBarcode?.name}</DialogTitle>
+          </DialogHeader>
+          {showBarcode && (
+            <div className="space-y-4">
+              <div className="flex flex-col items-center gap-4 p-6 bg-muted/50 rounded-lg">
+                <BarcodeDisplay value={showBarcode.id} />
+                <div className="text-center space-y-1">
+                  <p className="font-semibold text-lg">{showBarcode.name}</p>
+                  <p className="text-sm text-muted-foreground">Batch: {showBarcode.batch}</p>
+                  <p className="text-sm text-muted-foreground">SKU: {showBarcode.id}</p>
+                  <p className="font-semibold text-lg">₹{showBarcode.sellingPrice}</p>
+                </div>
+              </div>
+              <div className="flex justify-center">
+                <PrintableBarcode value={showBarcode.id} itemName={showBarcode.name} />
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

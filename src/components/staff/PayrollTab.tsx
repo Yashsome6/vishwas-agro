@@ -4,8 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { DollarSign, TrendingUp, Users, Calendar } from "lucide-react";
+import { DollarSign, TrendingUp, Users, Calendar, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { exportToCSV } from "@/lib/exportUtils";
 
 export default function PayrollTab() {
   const { data } = useAppData();
@@ -44,6 +45,24 @@ export default function PayrollTab() {
       title: "Payroll processed successfully",
       description: `Payroll for ${new Date(selectedMonth).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })} has been processed.`
     });
+  };
+
+  const downloadPayrollReport = () => {
+    const reportData = data.employees.map((emp: any) => {
+      const payroll = calculatePayroll(emp);
+      return {
+        Employee: emp.name,
+        Department: emp.department,
+        BaseSalary: emp.salary,
+        PresentDays: payroll.presentDays,
+        HalfDays: payroll.halfDays,
+        GrossSalary: payroll.grossSalary,
+        PF: payroll.pf,
+        Tax: payroll.tax,
+        NetSalary: payroll.netSalary
+      };
+    });
+    exportToCSV(reportData, `payroll-${selectedMonth}`);
   };
 
   const totalGrossSalary = data.employees.reduce((sum: number, emp: any) => {
@@ -101,21 +120,25 @@ export default function PayrollTab() {
 
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Payroll Details</CardTitle>
-            <div className="flex items-center gap-2">
-              <input
-                type="month"
-                value={selectedMonth}
-                onChange={(e) => setSelectedMonth(e.target.value)}
-                className="rounded-md border border-input bg-background px-3 py-2 text-sm"
-              />
-              <Button onClick={processPayroll}>
-                <Calendar className="mr-2 h-4 w-4" />
-                Process Payroll
-              </Button>
+            <div className="flex items-center justify-between">
+              <CardTitle>Payroll Details</CardTitle>
+              <div className="flex items-center gap-2">
+                <input
+                  type="month"
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(e.target.value)}
+                  className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+                />
+                <Button variant="outline" onClick={downloadPayrollReport}>
+                  <Download className="mr-2 h-4 w-4" />
+                  Export
+                </Button>
+                <Button onClick={processPayroll}>
+                  <Calendar className="mr-2 h-4 w-4" />
+                  Process Payroll
+                </Button>
+              </div>
             </div>
-          </div>
         </CardHeader>
         <CardContent>
           <div className="rounded-md border">

@@ -8,15 +8,21 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Eye, Trash2, Search, Download } from "lucide-react";
+import { Plus, Eye, Trash2, Search, Download, Share2, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import DateRangeFilter from "@/components/common/DateRangeFilter";
+import { generateInvoicePDF } from "@/lib/pdfUtils";
+import { shareOnWhatsApp } from "@/lib/whatsappUtils";
+import { QRCodeSVG } from "qrcode.react";
 
 export default function SalesInvoicesTab() {
   const { data, updateData } = useAppData();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [dateRange, setDateRange] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
+  const [viewInvoice, setViewInvoice] = useState<any>(null);
   const [formData, setFormData] = useState({
     customerId: "",
     date: new Date().toISOString().split("T")[0],
@@ -26,11 +32,69 @@ export default function SalesInvoicesTab() {
 
   const filteredInvoices = data.sales.filter((sale: any) => {
     const customer = data.customers.find((c: any) => c.id === sale.customerId);
-    return (
-      sale.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      customer?.name.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesSearch = sale.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      customer?.name.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesDate = !dateRange.start || !dateRange.end || (
+      new Date(sale.date) >= dateRange.start && new Date(sale.date) <= dateRange.end
     );
+    
+    return matchesSearch && matchesDate;
   });
+
+  const handleDateFilter = (start: Date | null, end: Date | null) => {
+    setDateRange({ start, end });
+  };
+
+  const handleDownloadPDF = (sale: any) => {
+    const customer = data.customers.find((c: any) => c.id === sale.customerId);
+    const invoiceData = {
+      id: sale.id,
+      date: sale.date,
+      customerName: customer?.name || "Unknown",
+      customerAddress: customer?.address,
+      customerGST: customer?.gst,
+      items: sale.items.map((item: any) => {
+        const stockItem = data.stock.find((s: any) => s.id === item.stockId);
+        return {
+          name: stockItem?.name || "Unknown Item",
+          quantity: item.quantity,
+          rate: item.rate,
+          amount: item.quantity * item.rate
+        };
+      }),
+      subtotal: sale.subtotal,
+      cgst: sale.cgst,
+      sgst: sale.sgst,
+      total: sale.total,
+      paymentStatus: sale.paymentStatus
+    };
+    generateInvoicePDF(invoiceData);
+  };
+
+  const handleWhatsAppShare = (sale: any) => {
+    const customer = data.customers.find((c: any) => c.id === sale.customerId);
+    const invoiceData = {
+      id: sale.id,
+      date: sale.date,
+      customerName: customer?.name || "Unknown",
+      items: sale.items.map((item: any) => {
+        const stockItem = data.stock.find((s: any) => s.id === item.stockId);
+        return {
+          name: stockItem?.name || "Unknown Item",
+          quantity: item.quantity,
+          rate: item.rate,
+          amount: item.quantity * item.rate
+        };
+      }),
+      subtotal: sale.subtotal,
+      cgst: sale.cgst,
+      sgst: sale.sgst,
+      total: sale.total,
+      paymentStatus: sale.paymentStatus
+    };
+    shareOnWhatsApp(invoiceData, customer?.contact);
+  };
 
   const calculateInvoiceTotal = (items: any[]) => {
     const subtotal = items.reduce((sum, item) => {
@@ -281,7 +345,7 @@ export default function SalesInvoicesTab() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="mb-4">
+          <div className="mb-4 space-y-4">
             <div className="relative">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
@@ -291,6 +355,7 @@ export default function SalesInvoicesTab() {
                 className="pl-10"
               />
             </div>
+            <DateRangeFilter onFilterChange={handleDateFilter} />
           </div>
 
           <div className="border rounded-lg">
@@ -323,14 +388,17 @@ export default function SalesInvoicesTab() {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button variant="ghost" size="sm">
+                      <div className="flex justify-end gap-1">
+                        <Button variant="ghost" size="sm" onClick={() => setViewInvoice(sale)} title="View">
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="sm">
+                        <Button variant="ghost" size="sm" onClick={() => handleDownloadPDF(sale)} title="Download PDF">
                           <Download className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => handleDelete(sale.id)}>
+                        <Button variant="ghost" size="sm" onClick={() => handleWhatsAppShare(sale)} title="Share on WhatsApp">
+                          <Share2 className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => handleDelete(sale.id)} title="Delete">
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
@@ -342,6 +410,108 @@ export default function SalesInvoicesTab() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Invoice Preview Dialog */}
+      <Dialog open={!!viewInvoice} onOpenChange={() => setViewInvoice(null)}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Invoice Preview - {viewInvoice?.id}</DialogTitle>
+          </DialogHeader>
+          {viewInvoice && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">
+                <div>
+                  <p className="text-sm text-muted-foreground">Customer</p>
+                  <p className="font-semibold">{getCustomerName(viewInvoice.customerId)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Date</p>
+                  <p className="font-semibold">{format(new Date(viewInvoice.date), "PPP")}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Status</p>
+                  <Badge variant={
+                    viewInvoice.paymentStatus === "paid" ? "default" :
+                    viewInvoice.paymentStatus === "partial" ? "secondary" : "destructive"
+                  }>
+                    {viewInvoice.paymentStatus}
+                  </Badge>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Invoice #</p>
+                  <p className="font-mono font-semibold">{viewInvoice.id}</p>
+                </div>
+              </div>
+
+              <div className="border rounded-lg">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Item</TableHead>
+                      <TableHead>Qty</TableHead>
+                      <TableHead>Rate</TableHead>
+                      <TableHead className="text-right">Amount</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {viewInvoice.items.map((item: any, index: number) => {
+                      const stockItem = data.stock.find((s: any) => s.id === item.stockId);
+                      return (
+                        <TableRow key={index}>
+                          <TableCell>{stockItem?.name || "Unknown"}</TableCell>
+                          <TableCell>{item.quantity}</TableCell>
+                          <TableCell>₹{item.rate.toFixed(2)}</TableCell>
+                          <TableCell className="text-right">₹{(item.quantity * item.rate).toFixed(2)}</TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+
+              <div className="flex justify-between items-start">
+                <div className="flex items-center justify-center p-4 bg-background border rounded">
+                  <QRCodeSVG 
+                    value={`INV:${viewInvoice.id}|AMT:${viewInvoice.total}|DATE:${viewInvoice.date}`}
+                    size={120}
+                    level="H"
+                  />
+                </div>
+
+                <div className="space-y-2 min-w-[250px]">
+                  <div className="flex justify-between text-sm">
+                    <span>Subtotal:</span>
+                    <span>₹{viewInvoice.subtotal.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span>CGST (9%):</span>
+                    <span>₹{viewInvoice.cgst.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span>SGST (9%):</span>
+                    <span>₹{viewInvoice.sgst.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between font-bold text-lg border-t pt-2">
+                    <span>Total:</span>
+                    <span>₹{viewInvoice.total.toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-2 justify-end">
+                <Button variant="outline" onClick={() => handleDownloadPDF(viewInvoice)}>
+                  <FileText className="mr-2 h-4 w-4" />
+                  Download PDF
+                </Button>
+                <Button onClick={() => handleWhatsAppShare(viewInvoice)}>
+                  <Share2 className="mr-2 h-4 w-4" />
+                  Share on WhatsApp
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

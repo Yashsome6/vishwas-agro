@@ -3,6 +3,7 @@ import { useAppData } from "@/contexts/AppContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import DateRangeFilter from "@/components/common/DateRangeFilter";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -17,6 +18,7 @@ export default function PurchaseVouchersTab() {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [dateRange, setDateRange] = useState<{ start: Date | null; end: Date | null }>({ start: null, end: null });
   const [formData, setFormData] = useState({
     vendorId: "",
     date: new Date().toISOString().split("T")[0],
@@ -26,11 +28,19 @@ export default function PurchaseVouchersTab() {
 
   const filteredVouchers = data.purchases.filter((purchase: any) => {
     const vendor = data.vendors.find((v: any) => v.id === purchase.vendorId);
-    return (
-      purchase.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      vendor?.name.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesSearch = purchase.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      vendor?.name.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesDate = !dateRange.start || !dateRange.end || (
+      new Date(purchase.date) >= dateRange.start && new Date(purchase.date) <= dateRange.end
     );
+    
+    return matchesSearch && matchesDate;
   });
+
+  const handleDateFilter = (start: Date | null, end: Date | null) => {
+    setDateRange({ start, end });
+  };
 
   const calculateVoucherTotal = (items: any[]) => {
     const subtotal = items.reduce((sum, item) => {
@@ -272,7 +282,7 @@ export default function PurchaseVouchersTab() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="mb-4">
+          <div className="mb-4 space-y-4">
             <div className="relative">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
@@ -282,6 +292,7 @@ export default function PurchaseVouchersTab() {
                 className="pl-10"
               />
             </div>
+            <DateRangeFilter onFilterChange={handleDateFilter} />
           </div>
 
           <div className="border rounded-lg">
