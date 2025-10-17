@@ -1,10 +1,27 @@
 import { useAppData } from "@/contexts/AppContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { TrendingUp, TrendingDown, Package, DollarSign, AlertCircle, ShoppingCart } from "lucide-react";
+import { TrendingUp, Package, DollarSign, AlertCircle, ShoppingCart } from "lucide-react";
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { useEffect, useState } from "react";
+import AlertBanner from "@/components/common/AlertBanner";
+import { checkLowStockAlerts, checkOverduePayments, checkOverduePurchases } from "@/lib/alertUtils";
 
 export default function Dashboard() {
   const { data } = useAppData();
+  const [showLowStockAlert, setShowLowStockAlert] = useState(false);
+  const [showOverdueAlert, setShowOverdueAlert] = useState(false);
+  const [showOverduePurchaseAlert, setShowOverduePurchaseAlert] = useState(false);
+
+  useEffect(() => {
+    // Check for alerts on mount
+    const lowStockItems = checkLowStockAlerts(data.stock);
+    const overdueSales = checkOverduePayments(data.sales);
+    const overduePurchases = checkOverduePurchases(data.purchases);
+
+    setShowLowStockAlert(lowStockItems.length > 0);
+    setShowOverdueAlert(overdueSales.length > 0);
+    setShowOverduePurchaseAlert(overduePurchases.length > 0);
+  }, [data.stock, data.sales, data.purchases]);
 
   const totalSales = data.sales.reduce((sum, sale) => sum + sale.total, 0);
   const totalPurchases = data.purchases.reduce((sum, purchase) => sum + purchase.total, 0);
@@ -47,6 +64,50 @@ export default function Dashboard() {
         <h1 className="text-3xl font-bold text-foreground">Dashboard</h1>
         <p className="text-muted-foreground">Welcome back! Here's your business overview.</p>
       </div>
+
+      {/* Alert Banners */}
+      {showLowStockAlert && (
+        <AlertBanner
+          type="warning"
+          title="Low Stock Alert"
+          description={`${data.stock.filter(item => item.quantity <= item.minQuantity).length} items are running low on stock`}
+          actionLabel="View Stock"
+          actionLink="/stock"
+          onDismiss={() => setShowLowStockAlert(false)}
+        />
+      )}
+
+      {showOverdueAlert && (
+        <AlertBanner
+          type="error"
+          title="Overdue Payments"
+          description={`You have ${data.sales.filter(s => {
+            if (s.status === 'paid') return false;
+            const saleDate = new Date(s.date);
+            const daysSinceSale = Math.ceil((new Date().getTime() - saleDate.getTime()) / (1000 * 60 * 60 * 24));
+            return daysSinceSale > 30;
+          }).length} overdue invoices`}
+          actionLabel="View Sales"
+          actionLink="/sales"
+          onDismiss={() => setShowOverdueAlert(false)}
+        />
+      )}
+
+      {showOverduePurchaseAlert && (
+        <AlertBanner
+          type="error"
+          title="Overdue Purchases"
+          description={`You have ${data.purchases.filter(p => {
+            if (p.status === 'paid') return false;
+            const purchaseDate = new Date(p.date);
+            const daysSincePurchase = Math.ceil((new Date().getTime() - purchaseDate.getTime()) / (1000 * 60 * 60 * 24));
+            return daysSincePurchase > 45;
+          }).length} overdue purchase payments`}
+          actionLabel="View Purchases"
+          actionLink="/purchase"
+          onDismiss={() => setShowOverduePurchaseAlert(false)}
+        />
+      )}
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {stats.map((stat, index) => (

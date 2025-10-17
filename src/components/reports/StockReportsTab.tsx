@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Package, TrendingDown, AlertTriangle, Download } from "lucide-react";
+import { exportToCSV } from "@/lib/exportUtils";
 
 export default function StockReportsTab() {
   const { data } = useAppData();
@@ -34,7 +35,13 @@ export default function StockReportsTab() {
   });
 
   const downloadReport = () => {
-    alert("Report download functionality - CSV export would be implemented here");
+    const reportData = categoryWiseStock.map((cat: any) => ({
+      Category: cat.name,
+      Items: cat.itemCount,
+      TotalQuantity: cat.totalQuantity,
+      StockValue: cat.stockValue,
+    }));
+    exportToCSV(reportData, "stock-report");
   };
 
   return (

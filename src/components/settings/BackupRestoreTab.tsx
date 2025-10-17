@@ -1,13 +1,16 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Download, Upload, Database, AlertCircle, Info } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 import { useAppData } from "@/contexts/AppContext";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { exportToJSON } from "@/lib/exportUtils";
+import { showSuccess, showError } from "@/lib/alertUtils";
+import ConfirmDialog from "@/components/common/ConfirmDialog";
+import { useState } from "react";
 
 export default function BackupRestoreTab() {
-  const { toast } = useToast();
   const { data, updateData } = useAppData();
+  const [showClearDialog, setShowClearDialog] = useState(false);
 
   const handleBackup = () => {
     const backup = {
@@ -15,23 +18,7 @@ export default function BackupRestoreTab() {
       version: "1.0.0",
       data: data,
     };
-
-    const dataStr = JSON.stringify(backup, null, 2);
-    const dataBlob = new Blob([dataStr], { type: "application/json" });
-    const url = URL.createObjectURL(dataBlob);
-    
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `agro-erp-backup-${new Date().toISOString().split('T')[0]}.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-
-    toast({ 
-      title: "Backup created successfully",
-      description: "Your data has been exported to a JSON file."
-    });
+    exportToJSON(backup, "agro-erp-backup");
   };
 
   const handleRestore = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -49,35 +36,21 @@ export default function BackupRestoreTab() {
             updateData(key as any, backup.data[key]);
           });
 
-          toast({ 
-            title: "Data restored successfully",
-            description: `Backup from ${new Date(backup.timestamp).toLocaleDateString()} has been restored.`
-          });
+          showSuccess("Data restored successfully", `Backup from ${new Date(backup.timestamp).toLocaleDateString()} has been restored.`);
         } else {
           throw new Error("Invalid backup file format");
         }
       } catch (error) {
-        toast({ 
-          title: "Restore failed",
-          description: "The backup file is invalid or corrupted.",
-          variant: "destructive"
-        });
+        showError("Restore failed", "The backup file is invalid or corrupted.");
       }
     };
     reader.readAsText(file);
   };
 
   const handleClearData = () => {
-    if (window.confirm("⚠️ WARNING: This will delete ALL data permanently. Are you sure?")) {
-      localStorage.removeItem("agroErpData");
-      window.location.reload();
-      
-      toast({ 
-        title: "Data cleared",
-        description: "All data has been removed. The page will reload.",
-        variant: "destructive"
-      });
-    }
+    localStorage.removeItem("agroErpData");
+    showSuccess("Data cleared", "All data has been removed. The page will reload.");
+    setTimeout(() => window.location.reload(), 1000);
   };
 
   const getDataSize = () => {
@@ -186,12 +159,23 @@ export default function BackupRestoreTab() {
               <p className="font-medium text-destructive">Clear All Data</p>
               <p className="text-sm text-muted-foreground">Permanently delete all data from the system</p>
             </div>
-            <Button variant="destructive" onClick={handleClearData}>
+            <Button variant="destructive" onClick={() => setShowClearDialog(true)}>
               Clear Data
             </Button>
           </div>
         </CardContent>
       </Card>
+
+      <ConfirmDialog
+        open={showClearDialog}
+        onOpenChange={setShowClearDialog}
+        title="Clear All Data"
+        description="⚠️ WARNING: This will permanently delete ALL data from the system. This action cannot be undone. Are you sure you want to continue?"
+        confirmLabel="Yes, Clear All Data"
+        cancelLabel="Cancel"
+        onConfirm={handleClearData}
+        variant="destructive"
+      />
     </div>
   );
 }
