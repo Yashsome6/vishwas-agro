@@ -9,9 +9,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Eye, Trash2, Search } from "lucide-react";
+import { Plus, Eye, Trash2, Search, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import { generatePurchasePDF } from "@/lib/pdfUtils";
 
 export default function PurchaseVouchersTab() {
   const { data, updateData } = useAppData();
@@ -115,6 +116,11 @@ export default function PurchaseVouchersTab() {
     const updatedPurchases = data.purchases.filter((p: any) => p.id !== id);
     updateData("purchases", updatedPurchases);
     toast({ title: "Purchase voucher deleted" });
+  };
+
+  const handleDownloadPDF = (purchase: any) => {
+    const vendor = data.vendors.find((v: any) => v.id === purchase.vendorId);
+    generatePurchasePDF(purchase, vendor?.name || "Unknown Vendor");
   };
 
   const resetForm = () => {
@@ -326,10 +332,18 @@ export default function PurchaseVouchersTab() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
-                        <Button variant="ghost" size="sm">
+                        <Button variant="ghost" size="sm" title="View">
                           <Eye className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => handleDelete(purchase.id)}>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => handleDownloadPDF(purchase)}
+                          title="Download PDF"
+                        >
+                          <Download className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => handleDelete(purchase.id)} title="Delete">
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>

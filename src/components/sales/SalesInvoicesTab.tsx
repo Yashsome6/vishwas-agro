@@ -46,7 +46,7 @@ export default function SalesInvoicesTab() {
     setDateRange({ start, end });
   };
 
-  const handleDownloadPDF = (sale: any) => {
+  const handleDownloadPDF = async (sale: any) => {
     const customer = data.customers.find((c: any) => c.id === sale.customerId);
     const invoiceData = {
       id: sale.id,
@@ -69,7 +69,7 @@ export default function SalesInvoicesTab() {
       total: sale.total,
       paymentStatus: sale.paymentStatus
     };
-    generateInvoicePDF(invoiceData);
+    await generateInvoicePDF(invoiceData, data.company);
   };
 
   const handleWhatsAppShare = (sale: any) => {

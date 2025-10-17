@@ -1,6 +1,7 @@
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { toast } from "sonner";
+import QRCode from "qrcode";
 
 interface InvoiceData {
   id: string;
@@ -22,7 +23,7 @@ interface InvoiceData {
 }
 
 // Generate professional PDF invoice with QR code
-export function generateInvoicePDF(invoice: InvoiceData, companyInfo?: any) {
+export async function generateInvoicePDF(invoice: InvoiceData, companyInfo?: any) {
   try {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.width;
@@ -121,13 +122,22 @@ export function generateInvoicePDF(invoice: InvoiceData, companyInfo?: any) {
     doc.text("Total:", summaryX, summaryY + 25);
     doc.text(`₹${invoice.total.toFixed(2)}`, summaryX + 50, summaryY + 25, { align: "right" });
     
-    // QR Code (placeholder - actual QR code data)
-    const qrData = `INV:${invoice.id}|AMT:${invoice.total}|DATE:${invoice.date}`;
+    // QR Code - Generate actual QR code
+    const qrData = `INV:${invoice.id}|AMT:${invoice.total}|DATE:${invoice.date}|CUSTOMER:${invoice.customerName}`;
+    const qrCodeDataUrl = await QRCode.toDataURL(qrData, {
+      width: 100,
+      margin: 1,
+      color: {
+        dark: '#000000',
+        light: '#FFFFFF'
+      }
+    });
+    
     doc.setFontSize(8);
     doc.text("Scan to verify", 15, summaryY + 20);
-    doc.rect(15, summaryY + 22, 25, 25); // QR code placeholder
+    doc.addImage(qrCodeDataUrl, 'PNG', 15, summaryY + 22, 25, 25);
     doc.setFontSize(7);
-    doc.text(qrData, 15, summaryY + 50, { maxWidth: 80 });
+    doc.text("Invoice Verification QR", 15, summaryY + 50, { maxWidth: 40 });
     
     // Footer
     const footerY = doc.internal.pageSize.height - 20;
