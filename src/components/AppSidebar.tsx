@@ -11,6 +11,7 @@ import {
   BarChart3,
   Zap,
   Receipt,
+  Brain,
 } from "lucide-react";
 import {
   Sidebar,
@@ -33,6 +34,7 @@ const menuItems = [
   { title: "Staff ERP", url: "/staff", icon: Users },
   { title: "Reports", url: "/reports", icon: FileText },
   { title: "Analytics", url: "/analytics", icon: BarChart3 },
+  { title: "AI Intelligence", url: "/ai", icon: Brain },
   { title: "Workflows", url: "/workflows", icon: Zap },
   { title: "GST Compliance", url: "/gst", icon: Receipt },
   { title: "Settings", url: "/settings", icon: Settings },

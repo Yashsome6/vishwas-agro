@@ -20,6 +20,7 @@ import VendorPortal from "./pages/VendorPortal";
 import Analytics from "./pages/Analytics";
 import Workflows from "./pages/Workflows";
 import GSTCompliance from "./pages/GSTCompliance";
+import AIIntelligence from "./pages/AIIntelligence";
 
 const queryClient = new QueryClient();
 
@@ -43,6 +44,7 @@ const App = () => (
                 <Route path="analytics" element={<Analytics />} />
                 <Route path="workflows" element={<Workflows />} />
                 <Route path="gst" element={<GSTCompliance />} />
+                <Route path="ai" element={<AIIntelligence />} />
                 <Route path="settings" element={<Settings />} />
               </Route>
               <Route path="customer-portal" element={<CustomerPortal />} />
