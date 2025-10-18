@@ -3,6 +3,7 @@ import CompanySettingsTab from "@/components/settings/CompanySettingsTab";
 import UserPreferencesTab from "@/components/settings/UserPreferencesTab";
 import SystemConfigTab from "@/components/settings/SystemConfigTab";
 import BackupRestoreTab from "@/components/settings/BackupRestoreTab";
+import RoleManagementTab from "@/components/settings/RoleManagementTab";
 
 export default function Settings() {
   return (
@@ -17,6 +18,7 @@ export default function Settings() {
           <TabsTrigger value="company">Company Details</TabsTrigger>
           <TabsTrigger value="preferences">User Preferences</TabsTrigger>
           <TabsTrigger value="system">System Config</TabsTrigger>
+          <TabsTrigger value="roles">Role Management</TabsTrigger>
           <TabsTrigger value="backup">Backup & Restore</TabsTrigger>
         </TabsList>
 
@@ -30,6 +32,10 @@ export default function Settings() {
 
         <TabsContent value="system" className="space-y-4">
           <SystemConfigTab />
+        </TabsContent>
+
+        <TabsContent value="roles" className="space-y-4">
+          <RoleManagementTab />
         </TabsContent>
 
         <TabsContent value="backup" className="space-y-4">

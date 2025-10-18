@@ -8,6 +8,9 @@ import {
   Users,
   FileText,
   Settings,
+  BarChart3,
+  Zap,
+  Receipt,
 } from "lucide-react";
 import {
   Sidebar,
@@ -29,6 +32,9 @@ const menuItems = [
   { title: "Accounting", url: "/accounting", icon: Calculator },
   { title: "Staff ERP", url: "/staff", icon: Users },
   { title: "Reports", url: "/reports", icon: FileText },
+  { title: "Analytics", url: "/analytics", icon: BarChart3 },
+  { title: "Workflows", url: "/workflows", icon: Zap },
+  { title: "GST Compliance", url: "/gst", icon: Receipt },
   { title: "Settings", url: "/settings", icon: Settings },
 ];
 
