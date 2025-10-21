@@ -7,16 +7,16 @@ import { format, subMonths, startOfMonth } from "date-fns";
 export default function Analytics() {
   const { data } = useAppData();
 
-  // Calculate KPIs
-  const totalRevenue = data.sales.reduce((sum, inv) => sum + inv.total, 0);
-  const totalCost = data.purchases.reduce((sum, pv) => sum + pv.total, 0);
+  // Calculate KPIs with safe fallbacks
+  const totalRevenue = (data.sales || []).reduce((sum, inv) => sum + inv.total, 0);
+  const totalCost = (data.purchases || []).reduce((sum, pv) => sum + pv.total, 0);
   const grossProfit = totalRevenue - totalCost;
   const profitMargin = totalRevenue > 0 ? (grossProfit / totalRevenue) * 100 : 0;
 
-  const totalStockValue = data.stock.reduce((sum, item) => sum + (item.quantity * item.sellingPrice), 0);
-  const lowStockItems = data.stock.filter(item => item.quantity < item.minQuantity).length;
-  const activeCustomers = data.customers.length;
-  const activeVendors = data.vendors.length;
+  const totalStockValue = (data.stock || []).reduce((sum, item) => sum + (item.quantity * item.sellingPrice), 0);
+  const lowStockItems = (data.stock || []).filter(item => item.quantity < item.minQuantity).length;
+  const activeCustomers = (data.customers || []).length;
+  const activeVendors = (data.vendors || []).length;
 
   // Monthly trends
   const last6Months = Array.from({ length: 6 }, (_, i) => {
@@ -25,11 +25,11 @@ export default function Analytics() {
   });
 
   const monthlyTrends = last6Months.map((month) => {
-    const revenue = data.sales
+    const revenue = (data.sales || [])
       .filter(inv => format(new Date(inv.date), "MMM yyyy") === month)
       .reduce((sum, inv) => sum + inv.total, 0);
     
-    const cost = data.purchases
+    const cost = (data.purchases || [])
       .filter(pv => format(new Date(pv.date), "MMM yyyy") === month)
       .reduce((sum, pv) => sum + pv.total, 0);
 
@@ -42,17 +42,17 @@ export default function Analytics() {
   });
 
   // Category-wise analysis
-  const categoryData = data.categories.map(cat => {
-    const items = data.stock.filter(item => item.category === cat.id);
+  const categoryData = (data.categories || []).map(cat => {
+    const items = (data.stock || []).filter(item => item.category === cat.id);
     const value = items.reduce((sum, item) => sum + (item.quantity * item.sellingPrice), 0);
     return { name: cat.name, value, items: items.length };
   });
 
   // Top performers
-  const topProducts = data.stock
+  const topProducts = (data.stock || [])
     .map(item => ({
       name: item.name,
-      revenue: data.sales
+      revenue: (data.sales || [])
         .flatMap(inv => inv.items)
         .filter(invItem => invItem.itemId === item.id)
         .reduce((sum, invItem) => sum + (invItem.quantity * invItem.rate), 0),
@@ -61,10 +61,10 @@ export default function Analytics() {
     .slice(0, 5);
 
   // Warehouse distribution
-  const warehouseData = data.warehouses.map(wh => ({
+  const warehouseData = (data.warehouses || []).map(wh => ({
     name: wh.name,
-    items: data.stock.filter(item => item.warehouse === wh.id).length,
-    value: data.stock
+    items: (data.stock || []).filter(item => item.warehouse === wh.id).length,
+    value: (data.stock || [])
       .filter(item => item.warehouse === wh.id)
       .reduce((sum, item) => sum + (item.quantity * item.sellingPrice), 0),
   }));
@@ -116,7 +116,7 @@ export default function Analytics() {
           <CardContent>
             <div className="text-2xl font-bold">{activeCustomers}</div>
             <p className="text-xs text-muted-foreground">
-              {data.customers.length} total customers
+              {(data.customers || []).length} total customers
             </p>
           </CardContent>
         </Card>
@@ -129,7 +129,7 @@ export default function Analytics() {
           <CardContent>
             <div className="text-2xl font-bold">{activeVendors}</div>
             <p className="text-xs text-muted-foreground">
-              {data.vendors.length} total vendors
+              {(data.vendors || []).length} total vendors
             </p>
           </CardContent>
         </Card>
