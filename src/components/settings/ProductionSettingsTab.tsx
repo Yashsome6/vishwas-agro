@@ -3,7 +3,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, Download, Upload, Database, Shield } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { db } from "@/lib/indexedDB";
+import { dataManager } from "@/lib/dataManager";
 import { errorHandler } from "@/lib/errorHandler";
 
 export default function ProductionSettingsTab() {
@@ -11,28 +11,25 @@ export default function ProductionSettingsTab() {
 
   const handleBackupCreate = async () => {
     try {
-      const backupJson = await db.createBackup();
+      const backupJson = await dataManager.createBackup();
       const blob = new Blob([backupJson], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `erp-backup-${new Date().toISOString().split('T')[0]}.json`;
+      a.download = `agro-erp-backup-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
-
+      
       toast({
         title: "Backup Created",
         description: "Your data has been backed up successfully",
       });
     } catch (error) {
-      errorHandler.logError({
-        severity: 'error',
-        message: 'Failed to create backup',
-        context: { error },
-      });
       toast({
         title: "Backup Failed",
-        description: "Could not create backup. Please try again.",
+        description: "Failed to create backup",
         variant: "destructive",
       });
     }
@@ -40,62 +37,59 @@ export default function ProductionSettingsTab() {
 
   const handleExportData = async () => {
     try {
-      const dataJson = await db.exportToJSON();
-      const blob = new Blob([dataJson], { type: 'application/json' });
+      const jsonData = await dataManager.exportData();
+      const blob = new Blob([jsonData], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `erp-data-export-${new Date().toISOString().split('T')[0]}.json`;
+      a.download = `agro-erp-export-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
-
+      
       toast({
         title: "Data Exported",
         description: "Your data has been exported successfully",
       });
     } catch (error) {
-      errorHandler.logError({
-        severity: 'error',
-        message: 'Failed to export data',
-        context: { error },
-      });
       toast({
         title: "Export Failed",
-        description: "Could not export data. Please try again.",
+        description: "Failed to export data",
         variant: "destructive",
       });
     }
   };
 
-  const handleImportData = () => {
+  const handleImportData = async () => {
     const input = document.createElement('input');
     input.type = 'file';
-    input.accept = 'application/json';
+    input.accept = '.json';
+    
     input.onchange = async (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (!file) return;
 
       try {
         const text = await file.text();
-        await db.importFromJSON(text);
-
+        await dataManager.importData(text);
+        
         toast({
           title: "Data Imported",
-          description: "Your data has been imported successfully. Please refresh the page.",
+          description: "Your data has been imported successfully. Reloading...",
         });
+        
+        // Reload page to reflect new data
+        setTimeout(() => window.location.reload(), 1500);
       } catch (error) {
-        errorHandler.logError({
-          severity: 'error',
-          message: 'Failed to import data',
-          context: { error },
-        });
         toast({
           title: "Import Failed",
-          description: "Could not import data. Please check the file format.",
+          description: "Failed to import data. Please check the file format.",
           variant: "destructive",
         });
       }
     };
+    
     input.click();
   };
 

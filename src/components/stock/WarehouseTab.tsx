@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import EmptyState from "@/components/common/EmptyState";
 
 export default function WarehouseTab() {
   const { data, updateData } = useAppData();
@@ -23,8 +24,12 @@ export default function WarehouseTab() {
     quantity: ""
   });
 
+  // Defensive checks for data
+  const warehouses = data.warehouses || [];
+  const stock = data.stock || [];
+
   const getWarehouseStock = (warehouseId: string) => {
-    return data.stock.filter((item: any) => item.warehouse === warehouseId);
+    return stock.filter((item: any) => item.warehouse === warehouseId);
   };
 
   const getWarehouseValue = (warehouseId: string) => {
@@ -34,7 +39,7 @@ export default function WarehouseTab() {
   };
 
   const handleTransfer = () => {
-    const item = data.stock.find((i: any) => i.id === transferData.itemId);
+    const item = stock.find((i: any) => i.id === transferData.itemId);
     if (!item || item.warehouse !== transferData.fromWarehouse) {
       toast({ title: "Error", description: "Invalid transfer", variant: "destructive" });
       return;
@@ -46,7 +51,7 @@ export default function WarehouseTab() {
       return;
     }
 
-    const updatedStock = data.stock.map((i: any) => {
+    const updatedStock = stock.map((i: any) => {
       if (i.id === transferData.itemId) {
         return { ...i, quantity: i.quantity - quantity };
       }
@@ -68,13 +73,23 @@ export default function WarehouseTab() {
   };
 
   const filteredStock = selectedWarehouse === "all" 
-    ? data.stock 
+    ? stock 
     : getWarehouseStock(selectedWarehouse);
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-3">
-        {data.warehouses.map((warehouse: any) => {
+      {warehouses.length === 0 && (
+        <EmptyState
+          icon={Warehouse}
+          title="No Warehouses"
+          description="Create your first warehouse to start managing stock locations"
+        />
+      )}
+      
+      {warehouses.length > 0 && (
+        <>
+          <div className="grid gap-4 md:grid-cols-3">
+            {warehouses.map((warehouse: any) => {
           const stock = getWarehouseStock(warehouse.id);
           const value = getWarehouseValue(warehouse.id);
           const utilization = (warehouse.currentStock / warehouse.capacity) * 100;
@@ -129,7 +144,7 @@ export default function WarehouseTab() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Warehouses</SelectItem>
-                  {data.warehouses.map((w: any) => (
+                  {warehouses.map((w: any) => (
                     <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>
                   ))}
                 </SelectContent>
@@ -154,7 +169,7 @@ export default function WarehouseTab() {
                           <SelectValue placeholder="Select item" />
                         </SelectTrigger>
                         <SelectContent>
-                          {data.stock.map((item: any) => (
+                          {stock.map((item: any) => (
                             <SelectItem key={item.id} value={item.id}>
                               {item.name} (Qty: {item.quantity})
                             </SelectItem>
@@ -170,7 +185,7 @@ export default function WarehouseTab() {
                             <SelectValue placeholder="From" />
                           </SelectTrigger>
                           <SelectContent>
-                            {data.warehouses.map((w: any) => (
+                            {warehouses.map((w: any) => (
                               <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>
                             ))}
                           </SelectContent>
@@ -183,7 +198,7 @@ export default function WarehouseTab() {
                             <SelectValue placeholder="To" />
                           </SelectTrigger>
                           <SelectContent>
-                            {data.warehouses.map((w: any) => (
+                            {warehouses.map((w: any) => (
                               <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>
                             ))}
                           </SelectContent>
@@ -220,7 +235,7 @@ export default function WarehouseTab() {
             </TableHeader>
             <TableBody>
               {filteredStock.map((item: any) => {
-                const warehouse = data.warehouses.find((w: any) => w.id === item.warehouse);
+                const warehouse = warehouses.find((w: any) => w.id === item.warehouse);
                 const status = item.quantity <= item.minQuantity ? 'low' : 'good';
                 
                 return (
@@ -244,6 +259,8 @@ export default function WarehouseTab() {
           </Table>
         </CardContent>
       </Card>
+      </>
+      )}
     </div>
   );
 }

@@ -3,8 +3,20 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Bell, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAppData } from "@/contexts/AppContext";
+import LoadingState from "@/components/common/LoadingState";
 
 export default function Layout() {
+  const { loading } = useAppData();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-muted/30">
+        <LoadingState type="card" rows={3} />
+      </div>
+    );
+  }
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
