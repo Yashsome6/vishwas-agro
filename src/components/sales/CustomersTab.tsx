@@ -25,7 +25,7 @@ export default function CustomersTab() {
     creditLimit: ""
   });
 
-  const filteredCustomers = data.customers.filter((customer: any) =>
+  const filteredCustomers = (data.customers || []).filter((customer: any) =>
     customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     customer.contact.includes(searchTerm) ||
     customer.gst.toLowerCase().includes(searchTerm.toLowerCase())
@@ -86,7 +86,7 @@ export default function CustomersTab() {
     setIsDialogOpen(false);
   };
 
-  const totalOutstanding = data.customers.reduce((sum: number, c: any) => sum + c.outstanding, 0);
+  const totalOutstanding = (data.customers || []).reduce((sum: number, c: any) => sum + (c.outstanding || 0), 0);
 
   return (
     <div className="space-y-6">

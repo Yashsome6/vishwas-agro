@@ -25,7 +25,7 @@ export default function VendorsTab() {
     paymentTerms: "30"
   });
 
-  const filteredVendors = data.vendors.filter((vendor: any) =>
+  const filteredVendors = (data.vendors || []).filter((vendor: any) =>
     vendor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     vendor.contact.includes(searchTerm) ||
     vendor.gst.toLowerCase().includes(searchTerm.toLowerCase())
@@ -85,7 +85,7 @@ export default function VendorsTab() {
     setIsDialogOpen(false);
   };
 
-  const totalOutstanding = data.vendors.reduce((sum: number, v: any) => sum + v.outstanding, 0);
+  const totalOutstanding = (data.vendors || []).reduce((sum: number, v: any) => sum + (v.outstanding || 0), 0);
 
   return (
     <div className="space-y-6">

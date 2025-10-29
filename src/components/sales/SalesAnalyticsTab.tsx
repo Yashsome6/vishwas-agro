@@ -6,13 +6,13 @@ import { TrendingUp, ShoppingBag, Users, AlertCircle } from "lucide-react";
 export default function SalesAnalyticsTab() {
   const { data } = useAppData();
 
-  const totalSalesAmount = data.sales.reduce((sum: number, s: any) => sum + s.total, 0);
-  const pendingPayments = data.sales
+  const totalSalesAmount = (data.sales || []).reduce((sum: number, s: any) => sum + (s.total || 0), 0);
+  const pendingPayments = (data.sales || [])
     .filter((s: any) => s.paymentStatus === "pending" || s.paymentStatus === "partial")
-    .reduce((sum: number, s: any) => sum + s.total, 0);
+    .reduce((sum: number, s: any) => sum + (s.total || 0), 0);
 
   // Monthly sales data
-  const monthlySales = data.sales.reduce((acc: any, sale: any) => {
+  const monthlySales = (data.sales || []).reduce((acc: any, sale: any) => {
     const month = new Date(sale.date).toLocaleString("default", { month: "short" });
     const existing = acc.find((item: any) => item.month === month);
     if (existing) {
@@ -24,26 +24,26 @@ export default function SalesAnalyticsTab() {
   }, []);
 
   // Customer-wise sales data
-  const customerSales = data.customers.map((customer: any) => {
-    const sales = data.sales.filter((s: any) => s.customerId === customer.id);
-    const total = sales.reduce((sum: number, s: any) => sum + s.total, 0);
+  const customerSales = (data.customers || []).map((customer: any) => {
+    const sales = (data.sales || []).filter((s: any) => s.customerId === customer.id);
+    const total = sales.reduce((sum: number, s: any) => sum + (s.total || 0), 0);
     return { name: customer.name, value: total };
   }).filter((c: any) => c.value > 0).slice(0, 5);
 
   // Payment status distribution
   const paymentStatusData = [
-    { name: "Paid", value: data.sales.filter((s: any) => s.paymentStatus === "paid").length },
-    { name: "Partial", value: data.sales.filter((s: any) => s.paymentStatus === "partial").length },
-    { name: "Pending", value: data.sales.filter((s: any) => s.paymentStatus === "pending").length }
+    { name: "Paid", value: (data.sales || []).filter((s: any) => s.paymentStatus === "paid").length },
+    { name: "Partial", value: (data.sales || []).filter((s: any) => s.paymentStatus === "partial").length },
+    { name: "Pending", value: (data.sales || []).filter((s: any) => s.paymentStatus === "pending").length }
   ];
 
   // Top selling products
-  const productSales = data.stock.map((stockItem: any) => {
-    const totalQtySold = data.sales.reduce((sum: number, sale: any) => {
-      const saleItem = sale.items.find((item: any) => item.stockId === stockItem.id);
+  const productSales = (data.stock || []).map((stockItem: any) => {
+    const totalQtySold = (data.sales || []).reduce((sum: number, sale: any) => {
+      const saleItem = (sale.items || []).find((item: any) => item.stockId === stockItem.id);
       return sum + (saleItem?.quantity || 0);
     }, 0);
-    return { name: stockItem.name, quantity: totalQtySold, value: totalQtySold * stockItem.sellingPrice };
+    return { name: stockItem.name, quantity: totalQtySold, value: totalQtySold * (stockItem.sellingPrice || 0) };
   }).filter((p: any) => p.quantity > 0).sort((a: any, b: any) => b.value - a.value).slice(0, 5);
 
   const COLORS = ["hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))"];

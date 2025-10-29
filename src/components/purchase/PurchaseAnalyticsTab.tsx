@@ -6,13 +6,13 @@ import { TrendingUp, ShoppingCart, Users, AlertCircle } from "lucide-react";
 export default function PurchaseAnalyticsTab() {
   const { data } = useAppData();
 
-  const totalPurchaseAmount = data.purchases.reduce((sum: number, p: any) => sum + p.total, 0);
-  const pendingPayments = data.purchases
+  const totalPurchaseAmount = (data.purchases || []).reduce((sum: number, p: any) => sum + (p.total || 0), 0);
+  const pendingPayments = (data.purchases || [])
     .filter((p: any) => p.paymentStatus === "pending" || p.paymentStatus === "partial")
-    .reduce((sum: number, p: any) => sum + p.total, 0);
+    .reduce((sum: number, p: any) => sum + (p.total || 0), 0);
 
   // Monthly purchase data
-  const monthlyPurchases = data.purchases.reduce((acc: any, purchase: any) => {
+  const monthlyPurchases = (data.purchases || []).reduce((acc: any, purchase: any) => {
     const month = new Date(purchase.date).toLocaleString("default", { month: "short" });
     const existing = acc.find((item: any) => item.month === month);
     if (existing) {
@@ -24,17 +24,17 @@ export default function PurchaseAnalyticsTab() {
   }, []);
 
   // Vendor-wise purchase data
-  const vendorPurchases = data.vendors.map((vendor: any) => {
-    const purchases = data.purchases.filter((p: any) => p.vendorId === vendor.id);
-    const total = purchases.reduce((sum: number, p: any) => sum + p.total, 0);
+  const vendorPurchases = (data.vendors || []).map((vendor: any) => {
+    const purchases = (data.purchases || []).filter((p: any) => p.vendorId === vendor.id);
+    const total = purchases.reduce((sum: number, p: any) => sum + (p.total || 0), 0);
     return { name: vendor.name, value: total };
   }).filter((v: any) => v.value > 0).slice(0, 5);
 
   // Payment status distribution
   const paymentStatusData = [
-    { name: "Paid", value: data.purchases.filter((p: any) => p.paymentStatus === "paid").length },
-    { name: "Partial", value: data.purchases.filter((p: any) => p.paymentStatus === "partial").length },
-    { name: "Pending", value: data.purchases.filter((p: any) => p.paymentStatus === "pending").length }
+    { name: "Paid", value: (data.purchases || []).filter((p: any) => p.paymentStatus === "paid").length },
+    { name: "Partial", value: (data.purchases || []).filter((p: any) => p.paymentStatus === "partial").length },
+    { name: "Pending", value: (data.purchases || []).filter((p: any) => p.paymentStatus === "pending").length }
   ];
 
   const COLORS = ["hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))"];
@@ -155,7 +155,7 @@ export default function PurchaseAnalyticsTab() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {data.vendors
+              {(data.vendors || [])
                 .filter((v: any) => v.outstanding > 0)
                 .slice(0, 5)
                 .map((vendor: any) => (
@@ -170,7 +170,7 @@ export default function PurchaseAnalyticsTab() {
                     </div>
                   </div>
                 ))}
-              {data.vendors.filter((v: any) => v.outstanding > 0).length === 0 && (
+              {(data.vendors || []).filter((v: any) => v.outstanding > 0).length === 0 && (
                 <p className="text-sm text-muted-foreground">No outstanding payments</p>
               )}
             </div>
