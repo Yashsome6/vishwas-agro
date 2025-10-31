@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { StockSidebar } from "@/components/stock/StockSidebar";
+import { Package } from "lucide-react";
 import StockDashboardTab from "@/components/stock/StockDashboardTab";
 import CategoriesTab from "@/components/stock/CategoriesTab";
 import StockEntriesTab from "@/components/stock/StockEntriesTab";
@@ -57,30 +58,46 @@ export default function Stock() {
       <div className="min-h-screen flex w-full bg-background">
         <StockSidebar activeTab={activeTab} onTabChange={setActiveTab} />
         
-        <div className="flex-1 flex flex-col">
-          <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4">
-            <SidebarTrigger className="-ml-1" />
-            <div className="flex-1">
-              <h1 className="text-lg font-semibold text-foreground">Stock Management</h1>
-              <p className="text-xs text-muted-foreground hidden sm:block">Advanced inventory control system</p>
+        <div className="flex-1 flex flex-col min-w-0">
+          <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b backdrop-blur-glass px-6 shadow-sm">
+            <SidebarTrigger className="-ml-1 hover:bg-sidebar-accent rounded-md transition-colors" />
+            <div className="flex-1 min-w-0">
+              <h1 className="text-lg font-bold text-foreground truncate">Stock Management</h1>
+              <p className="text-xs text-muted-foreground hidden sm:block truncate">
+                Advanced inventory control system for agro products
+              </p>
             </div>
             <NotificationCenter />
           </header>
 
-          <main className="flex-1 overflow-auto p-4 md:p-6">
-            {activeTab === "dashboard" && <StockDashboardTab />}
-            {activeTab === "entries" && <StockEntriesTab />}
-            {activeTab === "categories" && <CategoriesTab />}
-            {activeTab === "warehouses" && <WarehouseTab />}
-            {activeTab === "alerts" && <AlertsTab />}
-            {activeTab === "ledger" && <StockLedgerTab />}
-            {activeTab === "reorder" && <ReorderTab />}
-            {activeTab === "reports" && <div className="text-center p-8 text-muted-foreground">Reports coming soon...</div>}
-            {activeTab === "velocity" && <StockVelocityTab />}
-            {activeTab === "profit" && <ProfitAnalysisTab />}
-            {activeTab === "aging" && <StockAgingTab />}
-            {activeTab === "transfer" && <StockTransferTab />}
-            {activeTab === "audit" && <AuditTab />}
+          <main className="flex-1 overflow-auto p-6 md:p-8 bg-muted/30">
+            <div className="max-w-[1920px] mx-auto">
+              {activeTab === "dashboard" && <StockDashboardTab />}
+              {activeTab === "entries" && <StockEntriesTab />}
+              {activeTab === "categories" && <CategoriesTab />}
+              {activeTab === "warehouses" && <WarehouseTab />}
+              {activeTab === "alerts" && <AlertsTab />}
+              {activeTab === "ledger" && <StockLedgerTab />}
+              {activeTab === "reorder" && <ReorderTab />}
+              {activeTab === "reports" && (
+                <div className="flex flex-col items-center justify-center py-16">
+                  <div className="text-center space-y-3">
+                    <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                      <Package className="h-8 w-8 text-primary" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-foreground">Reports Coming Soon</h3>
+                    <p className="text-muted-foreground max-w-md">
+                      Advanced reporting features are under development and will be available soon.
+                    </p>
+                  </div>
+                </div>
+              )}
+              {activeTab === "velocity" && <StockVelocityTab />}
+              {activeTab === "profit" && <ProfitAnalysisTab />}
+              {activeTab === "aging" && <StockAgingTab />}
+              {activeTab === "transfer" && <StockTransferTab />}
+              {activeTab === "audit" && <AuditTab />}
+            </div>
           </main>
         </div>
 
